@@ -1,0 +1,84 @@
+name: Jira Create Release
+description: The composite action retrives the jira project id and version id and creates a new jira project version if none currently exists
+
+inputs:
+  release-name:
+    description: 'The name of the release to create in Jira'
+    required: true
+  jira-project-key:
+    description: 'The Jira project key for the release'
+    required: true
+  jira-subdomain:
+    description: The subdomain of your Jira cloud instance
+    required: true
+  jira-email:
+    description: Email of the machine user to make the call to Jira
+    required: true
+  jira-token:
+    description: Token of the machine user to make the call to Jira
+    required: true
+
+outputs:
+  project-id:
+    description: "The jira project id of the provided project"
+    value: ${{ steps.jira.outputs.PROJECT_ID }}
+  jira-version-id:
+    description: "The jira version id of the created version"
+    value: ${{ steps.version.outputs.VERSION_ID }}
+
+runs:
+  using: 'docker'
+  image: 'docker://debian:stretch-slim'
+  env:
+    JIRA_DOMAIN: https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3
+    JIRA_PROJECT_KEY: ${{ inputs.jira-project-key }}
+    JIRA_EMAIL: ${{ inputs.jira-email }}
+    JIRA_TOKEN: ${{ inputs.jira-token }}
+    RELEASE_NAME: ${{ inputs.release-name }}
+  steps:
+    - name: Get current information on the Project and Release
+      id: jira
+      run: |
+        PROJECT_ID=$(curl \
+          --url "$JIRA_DOMAIN/project/$JIRA_PROJECT_KEY" \
+          --user "$JIRA_EMAIL:$JIRA_TOKEN" | jq '.id' \
+        )
+        VERSION_ID=$(curl --request GET \
+          --url "$JIRA_DOMAIN/project/$JIRA_PROJECT_KEY/versions" \
+          --user "$JIRA_EMAIL:$JIRA_TOKEN" \
+          --header "Accept: application/json" \
+          | jq '.[] | select(.name=="'$RELEASE_NAME'").id' \
+        )'
+
+        echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
+        echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
+
+    - name: Create release
+      id: new-version
+      if: "${{ steps.jira.outputs.VERSION_ID == '' }}"
+      run: |
+        VERSION_ID=$(curl --request POST \
+          --url "$JIRA_DOMAIN/version" \
+          --user "$JIRA_EMAIL:$JIRA_TOKEN" \
+          --header "Accept: application/json" \
+          --header "Content-Type: application/json" \
+          --data '{
+            "archived": false,
+            "name": "'$RELEASE_NAME'",
+            "description": "Automatic Version Creation",
+            "projectId": "'$JIRA_PROJECT_KEY'",
+            "startDate": "'$(date +'%Y-%m-%d')'",
+            "released": false
+          }' | jq '.id' \
+        )
+
+    - name: Output Version id
+      id: version
+      run: |
+        if [ ${{ steps.jira.outputs.VERSION_ID }} == "" ]; then \
+          echo "VERSION_ID=${{ steps.new-version.outputs.VERSION_ID }}" >> $GITHUB_OUTPUT; \
+        else \
+          echo "VERSION_ID=${{ steps.jira.outputs.VERSION_ID }}" >> $GITHUB_OUTPUT; \
+        fi;
+
+
