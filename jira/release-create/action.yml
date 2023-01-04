@@ -27,27 +27,21 @@ outputs:
     value: ${{ steps.version.outputs.VERSION_ID }}
 
 runs:
-  using: 'docker'
-  image: 'docker://debian:stretch-slim'
-  env:
-    JIRA_DOMAIN: https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3
-    JIRA_PROJECT_KEY: ${{ inputs.jira-project-key }}
-    JIRA_EMAIL: ${{ inputs.jira-email }}
-    JIRA_TOKEN: ${{ inputs.jira-token }}
-    RELEASE_NAME: ${{ inputs.release-name }}
+  using: 'composite'
   steps:
     - name: Get current information on the Project and Release
       id: jira
+      shell: bash
       run: |
         PROJECT_ID=$(curl \
-          --url "$JIRA_DOMAIN/project/$JIRA_PROJECT_KEY" \
-          --user "$JIRA_EMAIL:$JIRA_TOKEN" | jq '.id' \
+          --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/project/${{ inputs.jira-project-key }}" \
+          --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" | jq '.id' \
         )
         VERSION_ID=$(curl --request GET \
-          --url "$JIRA_DOMAIN/project/$JIRA_PROJECT_KEY/versions" \
-          --user "$JIRA_EMAIL:$JIRA_TOKEN" \
+          --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/project/${{ inputs.jira-project-key }}/versions" \
+          --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
           --header "Accept: application/json" \
-          | jq '.[] | select(.name=="'$RELEASE_NAME'").id' \
+          | jq '.[] | select(.name=="${{ inputs.release-name }}").id' \
         )'
 
         echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
@@ -55,18 +49,19 @@ runs:
 
     - name: Create release
       id: new-version
+      shell: bash
       if: "${{ steps.jira.outputs.VERSION_ID == '' }}"
       run: |
         VERSION_ID=$(curl --request POST \
-          --url "$JIRA_DOMAIN/version" \
-          --user "$JIRA_EMAIL:$JIRA_TOKEN" \
+          --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/version" \
+          --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
           --data '{
             "archived": false,
-            "name": "'$RELEASE_NAME'",
+            "name": "${{ inputs.release-name }}",
             "description": "Automatic Version Creation",
-            "projectId": "'$JIRA_PROJECT_KEY'",
+            "projectId": "${{ inputs.jira-project-key }}",
             "startDate": "'$(date +'%Y-%m-%d')'",
             "released": false
           }' | jq '.id' \
@@ -74,6 +69,7 @@ runs:
 
     - name: Output Version id
       id: version
+      shell: bash
       run: |
         if [ ${{ steps.jira.outputs.VERSION_ID }} == "" ]; then \
           echo "VERSION_ID=${{ steps.new-version.outputs.VERSION_ID }}" >> $GITHUB_OUTPUT; \
