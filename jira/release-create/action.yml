@@ -65,6 +65,7 @@ runs:
             "released": false
           }' | jq '.id' \
         )
+        echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
 
     - name: Output Version id
       id: version
