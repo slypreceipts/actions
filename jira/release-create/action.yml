@@ -46,6 +46,8 @@ runs:
         echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
         echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
 
+        echo $PROJECT_ID $PROJECT_ID
+
     - name: Create release
       id: new-version
       shell: bash
@@ -60,7 +62,7 @@ runs:
             "archived": false,
             "name": "${{ inputs.release-name }}",
             "description": "Automatic Version Creation",
-            "projectId": "${{ inputs.jira-project-key }}",
+            "projectId": "${{ steps.jira.outputs.PROJECT_ID }}",
             "startDate": "'$(date +'%Y-%m-%d')'",
             "released": false
           }' | jq '.id' \
