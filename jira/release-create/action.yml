@@ -42,8 +42,7 @@ runs:
           --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
           --header "Accept: application/json" \
           | jq '.[] | select(.name=="${{ inputs.release-name }}").id' \
-        )'
-
+        )
         echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
         echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
 
