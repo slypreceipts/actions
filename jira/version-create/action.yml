@@ -2,9 +2,6 @@ name: Jira Version Create
 description: The composite action retrives the jira project id and version id and creates a new jira project version if none currently exists
 
 inputs:
-  release-name:
-    description: 'The name of the release to create in Jira'
-    required: true
   jira-project-key:
     description: 'The Jira project key for the release'
     required: true
@@ -16,6 +13,9 @@ inputs:
     required: true
   jira-token:
     description: Token of the machine user to make the call to Jira
+    required: true
+  version-name:
+    description: 'The name of the version to create in Jira'
     required: true
 
 outputs:
@@ -29,7 +29,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Get current information on the Project and Release
+    - name: Get current information on the project and version
       id: jira
       shell: bash
       run: |
@@ -41,12 +41,12 @@ runs:
           --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/project/${{ inputs.jira-project-key }}/versions" \
           --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
           --header "Accept: application/json" \
-          | jq '.[] | select(.name=="${{ inputs.release-name }}").id' \
+          | jq '.[] | select(.name=="${{ inputs.version-name }}").id' \
         )
         echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
         echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
 
-    - name: Create release
+    - name: Create version
       id: new-version
       shell: bash
       if: "${{ steps.jira.outputs.VERSION_ID == '' }}"
@@ -58,7 +58,7 @@ runs:
           --header "Content-Type: application/json" \
           --data '{
             "archived": false,
-            "name": "${{ inputs.release-name }}",
+            "name": "${{ inputs.version-name }}",
             "description": "Automatic Version Creation",
             "projectId": ${{ steps.jira.outputs.PROJECT_ID }},
             "startDate": "'$(date +'%Y-%m-%d')'",
