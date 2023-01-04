@@ -1,0 +1,57 @@
+name: Jira Version Assign
+description:
+  The composite action retrives assigns all tickets in the current repo performs a 
+  diff between the 2 commits and assigns all tickets to inputed release. This action should be used with 
+  release-create
+
+inputs:
+  jira-project-key:
+    description: 'The Jira project key for the release'
+    required: true
+  jira-subdomain:
+    description: The subdomain of your Jira cloud instance
+    required: true
+  jira-email:
+    description: Email of the machine user to make the call to Jira
+    required: true
+  jira-token:
+    description: Token of the machine user to make the call to Jira
+    required: true
+  git-target:
+    description: The git sha or branch to compare to
+    required: true
+  git-source:
+    description: The git sha or branch that has the lastest changes. Will be compared with the 'git-target'
+  version-name:
+    description: The name of the Jira version to assign tickets to
+    required: true
+  
+runs:
+  using: 'composite'
+  steps:
+    - id: jira
+      shell: bash
+      run: |
+        TICKETS=$(git log ${{ inputs.git-target }}..${{ inputs.git-source }} | grep -Eo '(${{ inputs.jira-project-key }}-)([0-9]+)' | uniq | paste -sd, -)
+       
+        echo "Assigning following tickets to Version ${{ inputs.version-name }}"
+        echo "============================================="
+        while IFS= read -r TICKET_ID
+        do
+          echo $TICKET_ID
+          curl --request GET \
+            --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/issue/$TICKET_ID" \
+            --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
+            --header "Accept: application/json" \
+            --data '{
+              "update": {
+                "fixVersions": [
+                  {
+                    "add": {
+                      "name": "${{ inputs.version-name }}"
+                    }
+                  }
+                ]
+              }
+            }'
+        done <<< "$TICKETS"

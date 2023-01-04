@@ -1,4 +1,4 @@
-name: Jira Create Release
+name: Jira Version Create
 description: The composite action retrives the jira project id and version id and creates a new jira project version if none currently exists
 
 inputs:
