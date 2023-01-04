@@ -71,12 +71,8 @@ runs:
       id: version
       shell: bash
       run: |
-        if [ "${{ steps.jira.outputs.VERSION_ID }}"=="" ]; then
+        if [ ${{ steps.jira.outputs.VERSION_ID }}=="" ]; then
           echo "VERSION_ID=${{ steps.new-version.outputs.VERSION_ID }}" >> $GITHUB_OUTPUT
         else
           echo "VERSION_ID=${{ steps.jira.outputs.VERSION_ID }}" >> $GITHUB_OUTPUT
         fi
-        echo ${{ steps.new-version.outputs.VERSION_ID }}
-        echo ${{ steps.jira.outputs.VERSION_ID }}
-
-
