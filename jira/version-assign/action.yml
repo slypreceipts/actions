@@ -36,7 +36,7 @@ runs:
     - id: jira
       shell: bash
       run: |
-        TICKETS=$(git log ${{ inputs.git-target }}..${{ inputs.git-source }} | grep -Eo '(${{ inputs.jira-project-key }}-)([0-9]+)' | uniq | paste -sd, -)
+        TICKETS=$(git log ${{ inputs.git-target }}..${{ inputs.git-source }} | grep -Eo '(${{ inputs.jira-project-key }}-)([0-9]+)' | uniq)
        
         echo "Assigning following tickets to Version ${{ inputs.version-name }}"
         echo "============================================="
