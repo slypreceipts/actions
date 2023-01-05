@@ -1,6 +1,7 @@
 name: Jira Version Release
 description:
-  The composite action release a Jira Project Version
+  The composite action release a Jira Project Version. This action should be used with 
+  release-create
 
 inputs:
   jira-subdomain:

@@ -22,7 +22,7 @@ outputs:
   project-id:
     description: "The jira project id of the provided project"
     value: ${{ steps.jira.outputs.PROJECT_ID }}
-  jira-version-id:
+  version-id:
     description: "The jira version id of the created version"
     value: ${{ steps.version.outputs.VERSION_ID }}
 
