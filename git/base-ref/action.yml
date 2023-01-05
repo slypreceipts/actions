@@ -10,17 +10,20 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: determine the base for comparison
       id: base
       shell: bash
       run: |
         if [[ "${{ github.ref_name }}" != "release/"* ]]; then
-          echo "BASE_REF=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "BASE_REF=origin/${{ github.ref_name }}" >> $GITHUB_OUTPUT
         else
           LAST_RELEASE_BRANCH=$(git for-each-ref refs/remotes/origin/release --sort=-committerdate --format='%(refname:lstrip=3)' --no-contains ${{ github.sha }} --count=1)
           if [ -z "$LAST_RELEASE_BRANCH" ]; then
             echo "BASE_REF=$(git rev-list --max-parents=0 HEAD)" >> $GITHUB_OUTPUT
           else
-            echo "BASE_REF=$LAST_RELEASE_BRANCH" >> $GITHUB_OUTPUT
+            echo "BASE_REF=origin/$LAST_RELEASE_BRANCH" >> $GITHUB_OUTPUT
           fi
         fi
