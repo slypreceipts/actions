@@ -1,0 +1,33 @@
+name: Jira Version Release
+description:
+  The composite action release a Jira Project Version
+
+inputs:
+  jira-subdomain:
+    description: The subdomain of your Jira cloud instance
+    required: true
+  jira-email:
+    description: Email of the machine user to make the call to Jira
+    required: true
+  jira-token:
+    description: Token of the machine user to make the call to Jira
+    required: true
+  version-id:
+    description: The id of the Jira version
+    required: true
+  
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: |
+        curl --request PUT \
+        --url 'https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/version/${{ inputs.version-id }}' \
+        --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
+        --header 'Accept: application/json' \
+        --header 'Content-Type: application/json' \
+        --data '{
+          "id": "${{ inputs.version-id }}",
+          "releaseDate": "'$(date +'%Y-%m-%d')'",
+          "released": true
+        }'
