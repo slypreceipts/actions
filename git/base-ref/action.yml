@@ -17,7 +17,7 @@ runs:
       id: base
       shell: bash
       run: |
-        if [[ "$GITHUB_REF" != "release/"* ]]; then
+        if [[ "${{ github.ref_name }}" != "release/"* ]]; then
           echo "BASE_REF=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         else
           LAST_RELEASE_BRANCH=$(git for-each-ref refs/remotes/origin/release --sort=-committerdate --format='%(refname:lstrip=3)' --no-contains 7eb3de99c494c0eddebdc1948bf68fa8f37c031b --count=1)
