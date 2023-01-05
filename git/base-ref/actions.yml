@@ -1,0 +1,29 @@
+name: Base Ref
+description:
+  The composite action gets the base ref to compare the difference between the current/new ref
+
+outputs:
+  base-ref:
+    description: "The base ref to compare to"
+    value: ${{ steps.base.outputs.BASE_REF }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: determine the base for comparison
+      id: base
+      shell: bash
+      run: |
+        if [[ "$GITHUB_REF" != "release/"* ]]; then
+          echo "BASE_REF=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        else
+          LAST_RELEASE_BRANCH=$(git for-each-ref refs/remotes/origin/release --sort=-committerdate --format='%(refname:lstrip=3)' --no-contains 7eb3de99c494c0eddebdc1948bf68fa8f37c031b --count=1)
+          if [ -z "$LAST_RELEASE_BRANCH" ]; then
+            echo "BASE_REF=$(git rev-list --max-parents=0 HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "BASE_REF=$LAST_RELEASE_BRANCH" >> $GITHUB_OUTPUT
+          fi
+        fi
