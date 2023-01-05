@@ -22,6 +22,7 @@ inputs:
     required: true
   git-source:
     description: The git sha or branch that has the lastest changes. Will be compared with the 'git-target'
+    required: true
   version-name:
     description: The name of the Jira version to assign tickets to
     required: true
