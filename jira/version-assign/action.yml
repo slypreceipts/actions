@@ -42,10 +42,11 @@ runs:
         while IFS= read -r TICKET_ID
         do
           echo $TICKET_ID
-          curl --request GET \
+          curl --request PUT \
             --url "https://${{ inputs.jira-subdomain }}.atlassian.net/rest/api/3/issue/$TICKET_ID" \
             --user "${{ inputs.jira-email }}:${{ inputs.jira-token }}" \
             --header "Accept: application/json" \
+            --header 'Content-Type: application/json' \
             --data '{
               "update": {
                 "fixVersions": [
