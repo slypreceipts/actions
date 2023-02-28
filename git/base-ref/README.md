@@ -18,6 +18,11 @@ jobs:
       - name: Get base ref
         id: git
         uses: slypreceipts/actions-pub/git/base-ref@develop
+      - name: Generate Version Name
+        id: version
+        run: |
+          BRANCH=${{ github.ref_name }}
+          echo "NAME=${BRANCH#release/}" >> $GITHUB_OUTPUT
 ```
 
 

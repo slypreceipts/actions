@@ -24,6 +24,6 @@ runs:
           if [ -z "$LAST_RELEASE_BRANCH" ]; then
             echo "BASE_REF=$(git rev-list --max-parents=0 HEAD)" >> $GITHUB_OUTPUT
           else
-            echo "BASE_REF=origin/$LAST_RELEASE_BRANCH" >> $GITHUB_OUTPUT
+            echo "BASE_REF=$LAST_RELEASE_BRANCH" >> $GITHUB_OUTPUT
           fi
         fi
